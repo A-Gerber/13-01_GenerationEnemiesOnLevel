@@ -6,7 +6,7 @@ using UnityEngine.Pool;
 public class Spawner : MonoBehaviour
 {
     [SerializeField] private Enemy _prefab;
-    [SerializeField] private PointSpawn _startPoint;
+    [SerializeField] private List<Vector3> _startPoints;
     [SerializeField] private ZonaLifeEnemy _zonaLifeEnemy;
     [SerializeField] private float _repeatRate = 2f;
     [SerializeField] private int _poolCapacity = 5;
@@ -15,8 +15,7 @@ public class Spawner : MonoBehaviour
     private ObjectPool<Enemy> _pool;
     private WaitForSeconds _wait;
     private Coroutine _coroutine;
-
-    private List<Vector3> _targets = new();
+    private Vector3 _target = new Vector3(-19, 1, 19);
 
     private void Awake()
     {
@@ -30,13 +29,6 @@ public class Spawner : MonoBehaviour
             maxSize: _poolMaxSize);
 
         _wait = new WaitForSeconds(_repeatRate);
-
-        _targets.Add(new Vector3(0, 1, 10));
-        _targets.Add(new Vector3(10, 1, 0));
-        _targets.Add(new Vector3(10, 1, 10));
-        _targets.Add(new Vector3(0, 1, -10));
-        _targets.Add(new Vector3(-10, 1, 0));
-        _targets.Add(new Vector3(-10, 1, -10));
     }
 
     private void OnEnable()
@@ -57,18 +49,16 @@ public class Spawner : MonoBehaviour
         enemy.Movement.ResetSpeed();
         enemy.gameObject.SetActive(false);
 
-        _zonaLifeEnemy.Exited -= ReleaseEnemy;
+        enemy.Exited -= ReleaseEnemy;
     }
 
     private void ActionOnGet(Enemy enemy)
     {
-        int numberTarget = UnityEngine.Random.Range(0, _targets.Count);
-
-        enemy.transform.position = _startPoint.transform.position;
-        enemy.transform.LookAt(_targets[numberTarget]);
+        enemy.transform.position = _startPoints[UnityEngine.Random.Range(0, _startPoints.Count)];
+        enemy.transform.LookAt(_target);
         enemy.gameObject.SetActive(true);
 
-        _zonaLifeEnemy.Exited += ReleaseEnemy;
+        enemy.Exited += ReleaseEnemy;
     }
 
     private void GetEnemy()
