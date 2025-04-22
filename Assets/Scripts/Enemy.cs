@@ -5,11 +5,12 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody), typeof(Movement))]
 public class Enemy : MonoBehaviour
 {
-    public Rigidbody _rigidbody;
+    private Rigidbody _rigidbody;
     private WaitForSeconds _wait;
     private float _lifetime = 2.0f;
 
-    public event Action<Enemy> Exited;
+    public event Action<Enemy> ExitedZonaLife;
+    public event Action<Enemy> EnteredTargetArea;
 
     public Movement Movement { get; private set; }
 
@@ -31,10 +32,18 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.TryGetComponent<TargetArea>(out _))
+        {
+            EnteredTargetArea?.Invoke(this);
+        }
+    }
+
     private IEnumerator DieOverTime()
     {
         yield return _wait;
 
-        Exited?.Invoke(this);
+        ExitedZonaLife?.Invoke(this);
     }
 }

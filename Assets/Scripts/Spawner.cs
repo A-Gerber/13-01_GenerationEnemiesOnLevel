@@ -5,17 +5,16 @@ using UnityEngine.Pool;
 
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] private Enemy _prefab;
-    [SerializeField] private List<Vector3> _startPoints;
-    [SerializeField] private ZonaLifeEnemy _zonaLifeEnemy;
-    [SerializeField] private float _repeatRate = 2f;
-    [SerializeField] private int _poolCapacity = 5;
-    [SerializeField] private int _poolMaxSize = 5;
+    private float _repeatRate = 2f;
+    private int _poolCapacity = 5;
+    private int _poolMaxSize = 5;
 
     private ObjectPool<Enemy> _pool;
     private WaitForSeconds _wait;
     private Coroutine _coroutine;
-    private Vector3 _target = new Vector3(-19, 1, 19);
+    private Enemy _prefab;
+    private Transform _startPoint;
+    private List<Transform> _waipoints;
 
     private void Awake()
     {
@@ -31,11 +30,6 @@ public class Spawner : MonoBehaviour
         _wait = new WaitForSeconds(_repeatRate);
     }
 
-    private void OnEnable()
-    {
-        _coroutine = StartCoroutine(GetEnemyOverTime());
-    }
-
     private void OnDisable()
     {
         if (_coroutine != null)
@@ -44,21 +38,35 @@ public class Spawner : MonoBehaviour
         }
     }
 
+    public void Work(Enemy prefab, Transform startPoint, List<Transform> waipoints)
+    {
+        _prefab = prefab;
+        _startPoint = startPoint;
+        _waipoints = waipoints;
+        _coroutine = StartCoroutine(GetEnemyOverTime());
+    }
+
     private void ActionOnRelease(Enemy enemy)
     {
-        enemy.Movement.ResetSpeed();
+        enemy.Movement.Reset();
         enemy.gameObject.SetActive(false);
 
-        enemy.Exited -= ReleaseEnemy;
+        enemy.ExitedZonaLife -= ReleaseEnemy;
+        enemy.EnteredTargetArea -= ReleaseEnemy;
     }
 
     private void ActionOnGet(Enemy enemy)
     {
-        enemy.transform.position = _startPoints[UnityEngine.Random.Range(0, _startPoints.Count)];
-        enemy.transform.LookAt(_target);
+        enemy.transform.position = _startPoint.position;
         enemy.gameObject.SetActive(true);
 
-        enemy.Exited += ReleaseEnemy;
+        if (_waipoints.Count != 0)
+        {
+            enemy.Movement.TakeRoute(_waipoints);
+        }
+
+        enemy.ExitedZonaLife += ReleaseEnemy;
+        enemy.EnteredTargetArea += ReleaseEnemy;
     }
 
     private void GetEnemy()
