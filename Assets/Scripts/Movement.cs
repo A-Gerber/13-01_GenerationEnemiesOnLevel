@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Animations;
 
 [RequireComponent(typeof(Animator))]
 public class Movement : MonoBehaviour
@@ -43,7 +42,18 @@ public class Movement : MonoBehaviour
 
     private void Update()
     {
-        Move();
+        if (_waypoints.Count != 0)
+        {
+            if (transform.position == _waypoints[_currentWaypoint].position)
+            {
+                _currentWaypoint = (_currentWaypoint + 1) % _waypoints.Count;
+            }
+
+            transform.LookAt(_waypoints[_currentWaypoint]);
+            transform.position = Vector3.MoveTowards(transform.position, _waypoints[_currentWaypoint].position, _currentSpeed * Time.deltaTime);
+
+            _animator.SetFloat(PlayerAnimatorData.Params.Speed, _currentSpeed);
+        }
     }
 
     public void Reset()
@@ -57,24 +67,6 @@ public class Movement : MonoBehaviour
         _waypoints = waypoints;
     }
 
-    private void Move()
-    {
-        if (_waypoints.Count == 0)
-        {
-            return;
-        }
-
-        if (transform.position == _waypoints[_currentWaypoint].position)
-        {
-            _currentWaypoint = (_currentWaypoint + 1) % _waypoints.Count;
-        }
-
-        this.transform.LookAt(_waypoints[_currentWaypoint]);
-        transform.position = Vector3.MoveTowards(transform.position, _waypoints[_currentWaypoint].position, _currentSpeed * Time.deltaTime);
-
-        _animator.SetFloat("Speed", _currentSpeed);
-    }
-
     private IEnumerator CalculateSpeed()
     {
         for (int i = _startSpeed; i < _maxSpeed; i++)
@@ -82,5 +74,13 @@ public class Movement : MonoBehaviour
             yield return _wait;
             _currentSpeed += _stepSpeed;
         }
+    }
+}
+
+public static class PlayerAnimatorData
+{
+    public static class Params
+    {
+        public static readonly int Speed = Animator.StringToHash(nameof(Speed));
     }
 }

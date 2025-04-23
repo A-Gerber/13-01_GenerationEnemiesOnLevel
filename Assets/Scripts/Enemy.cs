@@ -10,9 +10,10 @@ public class Enemy : MonoBehaviour
     private float _lifetime = 2.0f;
 
     public event Action<Enemy> ExitedZonaLife;
-    public event Action<Enemy> EnteredTargetArea;
+    public event Action<Enemy> ComedToTarget;
 
     public Movement Movement { get; private set; }
+    public Vector3 Birthplace { get; private set; }
 
     private void Awake()
     {
@@ -34,10 +35,15 @@ public class Enemy : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.TryGetComponent<TargetArea>(out _))
+        if (other.gameObject.TryGetComponent<Target>(out _))
         {
-            EnteredTargetArea?.Invoke(this);
+            ComedToTarget?.Invoke(this);
         }
+    }
+
+    public void SetBirthplace(Vector3 position)
+    {
+        Birthplace = position;
     }
 
     private IEnumerator DieOverTime()
